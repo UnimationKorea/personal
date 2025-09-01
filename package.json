@@ -1,0 +1,33 @@
+{
+  "name": "pbl-bible-story-prompt-builder",
+  "version": "1.2.0",
+  "description": "PBL 성경 스토리 프롬프트 빌더 - 교육용 프롬프트 생성 도구",
+  "main": "index.html",
+  "scripts": {
+    "dev": "python3 -m http.server 3000",
+    "build": "mkdir -p dist && cp -r public/* dist/ 2>/dev/null || cp index.html dist/index.html",
+    "preview": "cd dist && python3 -m http.server 3000",
+    "deploy": "npm run build && wrangler pages deploy dist",
+    "deploy:prod": "npm run build && wrangler pages deploy dist --project-name pbl-bible-prompt-builder"
+  },
+  "keywords": [
+    "education",
+    "bible",
+    "pbl",
+    "project-based-learning",
+    "prompt-builder",
+    "korean"
+  ],
+  "author": "Educational Tool Developer",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/user/pbl-bible-story-prompt-builder.git"
+  },
+  "devDependencies": {
+    "wrangler": "^3.78.0"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}

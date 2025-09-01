@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>PBL 성경 스토리 · 프롬프트 빌더</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @keyframes fadeIn { from{opacity:0; transform:translateY(6px)} to{opacity:1; transform:none} }
+    .fade-in { animation: fadeIn .35s ease-out both; }
+    body {
+      background: linear-gradient(to right, #ece9e6, #ffffff);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    header {
+      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    }
+    .card {
+      background: #fff;
+      border-radius: 1.25rem;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+      padding: 1.5rem;
+      transition: transform .25s;
+    }
+    .card:hover {
+      transform: translateY(-3px);
+    }
+    button {
+      transition: all .15s ease;
+      border: none;
+      cursor: pointer;
+    }
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none !important;
+    }
+    .btn-primary {
+      background: #4f46e5;
+      color: white;
+    }
+    .btn-primary:hover:not(:disabled) {
+      background: #4338ca;
+    }
+    .btn-secondary {
+      background: #10b981;
+      color: white;
+    }
+    .btn-secondary:hover:not(:disabled) {
+      background: #059669;
+    }
+    .btn-neutral {
+      background: #e2e8f0;
+      color: #334155;
+    }
+    .btn-neutral:hover:not(:disabled) {
+      background: #cbd5e1;
+    }
+    .btn-light {
+      border: 1px solid;
+    }
+    .btn-indigo {
+      background: #e0e7ff;
+      border-color: #a5b4fc;
+      color: #3730a3;
+    }
+    .btn-indigo:hover:not(:disabled) {
+      background: #c7d2fe;
+    }
+    .btn-emerald {
+      background: #d1fae5;
+      border-color: #6ee7b7;
+      color: #065f46;
+    }
+    .btn-emerald:hover:not(:disabled) {
+      background: #a7f3d0;
+    }
+  </style>
+</head>
+<body class="text-slate-800 min-h-screen">
+  <header class="sticky top-0 z-10 backdrop-blur border-b border-slate-200 shadow-sm">
+    <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+      <h1 class="text-xl md:text-2xl font-bold tracking-tight">PBL 성경 스토리 · Prompt Builder</h1>
+      <div class="text-sm text-slate-600">v1.2 · 클라이언트 전용</div>
+    </div>
+  </header>
+
+  <main class="max-w-6xl mx-auto px-4 py-8 grid grid-cols-1 lg:grid-cols-2 gap-8">
+    <!-- Left: Inputs -->
+    <section class="card fade-in">
+      <h2 class="text-lg font-semibold mb-4">입력 & 설정</h2>
+      <label class="block text-sm font-medium mb-1">성경 본문</label>
+      <textarea id="story" rows="8" class="w-full rounded-xl border-slate-300 focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400 p-3 mb-4 shadow-inner" placeholder="예) 1 Samuel 17 중 'David and Goliath' 일부 …"></textarea>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-medium mb-1">대상 연령</label>
+          <select id="age" class="w-full rounded-xl border-slate-300 focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400 p-2.5">
+            <option value="5-7">5–7세</option>
+            <option value="8-10" selected>8–10세</option>
+            <option value="11-13">11–13세</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1">출력 언어</label>
+          <select id="lang" class="w-full rounded-xl border-slate-300 focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400 p-2.5">
+            <option value="ko" selected>한국어</option>
+            <option value="en">English</option>
+            <option value="bi">Bilingual</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+        <div>
+          <label class="block text-sm font-medium mb-1">톤(분위기)</label>
+          <select id="tone" class="w-full rounded-xl border-slate-300 focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400 p-2.5">
+            <option value="gentle" selected>온화/따뜻함</option>
+            <option value="adventurous">모험/역동</option>
+            <option value="reflective">성찰/조용함</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1">질문 개수</label>
+          <input id="qcount" type="range" min="3" max="8" value="6" class="w-full">
+          <div class="mt-1 text-sm text-slate-600">선택: <span id="qcountLabel">6</span> 문항</div>
+        </div>
+      </div>
+
+      <div class="mt-4">
+        <label class="block text-sm font-medium mb-2">핵심 가치</label>
+        <div class="grid grid-cols-2 md:grid-cols-3 gap-2 text-sm">
+          <label class="flex items-center gap-2"><input type="checkbox" value="kindness(친절)" class="valueChk"> 친절</label>
+          <label class="flex items-center gap-2"><input type="checkbox" value="courage(용기)" class="valueChk" checked> 용기</label>
+          <label class="flex items-center gap-2"><input type="checkbox" value="sharing(나눔)" class="valueChk"> 나눔</label>
+          <label class="flex items-center gap-2"><input type="checkbox" value="forgiveness(용서)" class="valueChk"> 용서</label>
+          <label class="flex items-center gap-2"><input type="checkbox" value="gratitude(감사)" class="valueChk"> 감사</label>
+          <label class="flex items-center gap-2"><input type="checkbox" value="faith(믿음)" class="valueChk" checked> 믿음</label>
+        </div>
+      </div>
+
+      <div class="mt-6 flex flex-wrap gap-3">
+        <button id="buildBtn" class="px-4 py-2.5 rounded-xl btn-primary shadow-md">프롬프트 생성</button>
+        <button id="previewBtn" class="px-4 py-2.5 rounded-xl btn-secondary shadow-md">로컬 미리보기</button>
+        <button id="resetBtn" class="px-4 py-2.5 rounded-xl btn-neutral">리셋</button>
+        <button id="saveBtn" class="px-4 py-2.5 rounded-xl btn-neutral">설정 저장</button>
+        <button id="loadBtn" class="px-4 py-2.5 rounded-xl btn-neutral">불러오기</button>
+      </div>
+    </section>
+
+    <!-- Right: Outputs -->
+    <section class="card fade-in">
+      <h2 class="text-lg font-semibold mb-2">프롬프트 결과</h2>
+      <div class="flex gap-2 mb-2">
+        <button id="copyPrompt" class="px-3 py-1.5 rounded-lg btn-light btn-indigo" disabled>프롬프트 복사</button>
+        <button id="downloadPrompt" class="px-3 py-1.5 rounded-lg btn-light btn-indigo" disabled>프롬프트 저장</button>
+      </div>
+      <textarea id="promptOut" rows="14" class="w-full rounded-xl border-slate-300 p-3 font-mono text-[13px] shadow-inner" placeholder="여기에 생성된 프롬프트가 표시됩니다." readonly></textarea>
+
+      <h3 class="text-lg font-semibold mt-6 mb-2">로컬 미리보기</h3>
+      <div class="flex gap-2 mb-2">
+        <button id="copyPreview" class="px-3 py-1.5 rounded-lg btn-light btn-emerald" disabled>미리보기 복사</button>
+        <button id="downloadPreview" class="px-3 py-1.5 rounded-lg btn-light btn-emerald" disabled>미리보기 저장</button>
+      </div>
+      <pre id="previewOut" class="w-full rounded-xl border border-slate-200 bg-slate-50 p-3 text-[13px] whitespace-pre-wrap min-h-[200px]" style="font-family: inherit;">로컬 미리보기 버튼을 클릭하면 여기에 결과가 표시됩니다.</pre>
+    </section>
+  </main>
+
+  <footer class="max-w-6xl mx-auto px-4 pb-10 text-xs text-slate-600 text-center">
+    교육적 유의사항: 특정 교단 해석을 강요하지 말고, 아동 안전·포용 가이드를 준수하세요.
+  </footer>
+
+  <script>
+    // 통합된 메인 스크립트
+    (function() {
+      'use strict';
+      
+      const $ = (sel) => document.querySelector(sel);
+      const $$ = (sel) => document.querySelectorAll(sel);
+      
+      // DOM 요소들
+      const elements = {
+        story: $('#story'),
+        age: $('#age'),
+        lang: $('#lang'),
+        tone: $('#tone'),
+        qcount: $('#qcount'),
+        qcountLabel: $('#qcountLabel'),
+        promptOut: $('#promptOut'),
+        previewOut: $('#previewOut'),
+        buildBtn: $('#buildBtn'),
+        previewBtn: $('#previewBtn'),
+        resetBtn: $('#resetBtn'),
+        saveBtn: $('#saveBtn'),
+        loadBtn: $('#loadBtn'),
+        copyPrompt: $('#copyPrompt'),
+        copyPreview: $('#copyPreview'),
+        downloadPrompt: $('#downloadPrompt'),
+        downloadPreview: $('#downloadPreview')
+      };
+
+      // 유틸리티 함수들
+      function toast(msg) {
+        const el = document.createElement('div');
+        el.textContent = msg;
+        el.className = 'fixed bottom-6 left-1/2 -translate-x-1/2 px-4 py-2 rounded-xl bg-slate-900 text-white text-sm shadow-lg fade-in z-50';
+        document.body.appendChild(el);
+        
+        setTimeout(() => {
+          el.style.opacity = '0';
+          el.style.transform = 'translate(-50%, 12px)';
+        }, 2000);
+        
+        setTimeout(() => {
+          if (el.parentNode) {
+            el.parentNode.removeChild(el);
+          }
+        }, 2500);
+      }
+
+      function copyText(text) {
+        if (!text || !text.trim()) {
+          toast('복사할 내용이 없습니다.');
+          return;
+        }
+
+        if (navigator.clipboard && window.isSecureContext) {
+          navigator.clipboard.writeText(text)
+            .then(() => toast('복사되었습니다.'))
+            .catch(() => fallbackCopy(text));
+        } else {
+          fallbackCopy(text);
+        }
+
+        function fallbackCopy(text) {
+          const textarea = document.createElement('textarea');
+          textarea.value = text;
+          textarea.style.position = 'fixed';
+          textarea.style.opacity = '0';
+          textarea.style.top = '0';
+          textarea.style.left = '0';
+          
+          document.body.appendChild(textarea);
+          textarea.focus();
+          textarea.select();
+          
+          try {
+            document.execCommand('copy');
+            toast('복사되었습니다.');
+          } catch (err) {
+            toast('복사에 실패했습니다.');
+          }
+          
+          document.body.removeChild(textarea);
+        }
+      }
+
+      function downloadFile(filename, text) {
+        if (!text || !text.trim()) {
+          toast('다운로드할 내용이 없습니다.');
+          return;
+        }
+        
+        const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        
+        a.href = url;
+        a.download = filename;
+        a.style.display = 'none';
+        
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        
+        setTimeout(() => {
+          URL.revokeObjectURL(url);
+        }, 1000);
+        
+        toast('파일이 다운로드되었습니다.');
+      }
+
+      function sanitize(str) {
+        if (!str) return '';
+        return str.replace(/[\r\n\t]+/g, ' ').trim();
+      }
+
+      function createSlug(str) {
+        if (!str) return 'prompt';
+        return str.toLowerCase()
+          .replace(/[^a-z0-9가-힣\s]/g, '')
+          .replace(/\s+/g, '-')
+          .substring(0, 40)
+          .replace(/-+$/, '') || 'prompt';
+      }
+
+      function getSelectedValues() {
+        const checked = $$('.valueChk:checked');
+        return Array.from(checked).map(cb => cb.value);
+      }
+
+      function updateButtonStates() {
+        const hasPrompt = !!(elements.promptOut?.value || '').trim();
+        const hasPreview = !!(elements.previewOut?.textContent || '').trim();
+        
+        if (elements.copyPrompt) elements.copyPrompt.disabled = !hasPrompt;
+        if (elements.downloadPrompt) elements.downloadPrompt.disabled = !hasPrompt;
+        if (elements.copyPreview) elements.copyPreview.disabled = !hasPreview;
+        if (elements.downloadPreview) elements.downloadPreview.disabled = !hasPreview;
+      }
+
+      // 메인 기능들
+      function buildPrompt() {
+        const story = sanitize(elements.story?.value);
+        if (!story) {
+          toast('성경 본문을 입력해주세요.');
+          elements.story?.focus();
+          return;
+        }
+
+        const age = elements.age?.value || '8-10';
+        const lang = elements.lang?.value || 'ko';
+        const tone = elements.tone?.value || 'gentle';
+        const qcount = parseInt(elements.qcount?.value) || 6;
+        const values = getSelectedValues();
+
+        const ageGuide = {
+          '5-7': {
+            sentences: 3,
+            hints: 'use 5–8 words; who/what/where; avoid abstract terms.',
+            vocab: 'very simple words; present tense; short sentences.'
+          },
+          '8-10': {
+            sentences: 4,
+            hints: 'mix who/what/why/how; feelings & choices; daily-life examples.',
+            vocab: 'simple words + a few topic words.'
+          },
+          '11-13': {
+            sentences: 5,
+            hints: 'cause–effect; perspective-taking; brief evidence from text.',
+            vocab: 'age-appropriate academic words; connect ideas.'
+          }
+        };
+
+        const guide = ageGuide[age] || ageGuide['8-10'];
+        
+        const langInstruction = {
+          'ko': 'Respond in Korean.',
+          'en': 'Respond in English.',
+          'bi': 'Respond bilingually: first Korean, then English for each section.'
+        }[lang] || 'Respond in Korean.';
+
+        const valuesLine = values.length > 0 
+          ? `Emphasize these values gently: ${values.join(', ')}.`
+          : 'Emphasize kindness and empathy appropriate for children.';
+
+        const prompt = `You are an expert in children's Bible-based education and Project-Based Learning (PBL) design.
+${langInstruction}
+Tone: ${tone}.
+
+## Input
+- Bible Story Text (verbatim):
+"""
+${story}
+"""
+- Target Age: ${age} years
+- Number of PBL Questions: ${qcount}
+
+## Tasks
+1) Intro (2–3 sentences): set an engaging scene so children can imagine themselves in the story.
+2) Age-Level Story Summary (${guide.sentences} sentences): adapt to the age; ${guide.vocab}
+3) Expected Questions (${qcount} items): open-ended, age-appropriate; ${guide.hints}
+${valuesLine}
+
+## Output Format
+- Intro
+- Age-Level Story Summary
+- Expected Questions (numbered list)
+
+## Constraints
+- Positive, safe, developmentally suitable language.
+- Short, clear sentences.
+- Avoid doctrinal debates or complex theology.`;
+
+        elements.promptOut.value = prompt;
+        toast('프롬프트가 생성되었습니다.');
+        updateButtonStates();
+      }
+
+      function localPreview() {
+        const story = sanitize(elements.story?.value);
+        if (!story) {
+          toast('성경 본문을 입력해주세요.');
+          elements.story?.focus();
+          return;
+        }
+
+        const age = elements.age?.value || '8-10';
+        const lang = elements.lang?.value || 'ko';
+        const qcount = parseInt(elements.qcount?.value) || 6;
+        const values = getSelectedValues();
+
+        // 스토리 요약 생성
+        const sentences = story.replace(/[!?]/g, '.').split('.').map(s => s.trim()).filter(s => s);
+        const summaryLength = age === '5-7' ? 3 : age === '8-10' ? 4 : 5;
+        const summary = sentences.slice(0, Math.max(1, Math.min(summaryLength, sentences.length))).join('. ');
+
+        // 연령별 질문 템플릿
+        const questionTemplates = {
+          '5-7': [
+            '이야기에서 누가 나왔나요?',
+            '무슨 일이 있었나요?',
+            '가장 기억에 남는 순간은 무엇인가요?',
+            '당신이라면 어떻게 느꼈을까요?',
+            '친구에게 어떤 착한 일을 해 볼까요?',
+            '누가 도움을 받았나요?',
+            '어떤 기분이었을까요?'
+          ],
+          '8-10': [
+            '주인공이 그런 선택을 한 이유는 무엇일까요?',
+            '이야기에서 배울 수 있는 가치는 무엇인가요?',
+            '비슷한 경험이 있다면 들려줄래요?',
+            '다른 방법으로 문제를 풀 수 있었을까요?',
+            '오늘 생활에서 어떻게 실천해 볼까요?',
+            '등장인물들의 마음은 어땠을까요?',
+            '이 이야기가 현재에 주는 교훈은 무엇인가요?'
+          ],
+          '11-13': [
+            '사건의 원인과 결과를 연결해 설명해 보세요.',
+            '각 인물의 관점을 바꾸어 보면 무엇이 달라질까요?',
+            '핵심 가치가 드러난 순간은 언제였나요? 이유는?',
+            '비슷한 현대 상황에 적용한다면 어떻게 할 수 있을까요?',
+            '짧은 근거를 들어 자신의 생각을 말해보세요.',
+            '이 사건이 다른 사람들에게 미친 영향은 무엇인가요?',
+            '현대 사회의 어떤 문제와 연결될 수 있을까요?'
+          ]
+        };
+
+        const questions = (questionTemplates[age] || questionTemplates['8-10']).slice(0, qcount);
+        const valuesText = values.length > 0 ? `\n[강조 가치] ${values.join(', ')}` : '';
+
+        function generateKorean() {
+          return `[소개]
+이 장면 속에 들어가 본다고 상상해 보세요. 사람들이 느낀 감정을 함께 떠올려 봐요.
+
+[연령별 요약]
+${summary}
+
+[예상 질문]
+${questions.map((q, i) => `${i + 1}. ${q}`).join('\n')}${valuesText}`;
+        }
+
+        function generateEnglish() {
+          const englishQuestions = [
+            'Who appears in this story?',
+            'What happened in the story?',
+            'What moment do you remember most?',
+            'How would you feel in this situation?',
+            'What good action could you try today?',
+            'Who received help?',
+            'What emotions were involved?'
+          ].slice(0, qcount);
+
+          return `[Intro]
+Imagine you are inside this scene. Try to feel what the people felt.
+
+[Age-Level Summary]
+${summary}
+
+[Expected Questions]
+${englishQuestions.map((q, i) => `${i + 1}. ${q}`).join('\n')}`;
+        }
+
+        let output = '';
+        if (lang === 'ko') {
+          output = generateKorean();
+        } else if (lang === 'en') {
+          output = generateEnglish();
+        } else {
+          output = generateKorean() + '\n\n---\n\n' + generateEnglish();
+        }
+
+        elements.previewOut.textContent = output;
+        toast('로컬 미리보기가 생성되었습니다.');
+        updateButtonStates();
+      }
+
+      function resetForm() {
+        // 텍스트 영역 초기화
+        if (elements.story) elements.story.value = '';
+        if (elements.promptOut) elements.promptOut.value = '';
+        if (elements.previewOut) elements.previewOut.textContent = '로컬 미리보기 버튼을 클릭하면 여기에 결과가 표시됩니다.';
+        
+        // 선택 초기화
+        if (elements.age) elements.age.value = '8-10';
+        if (elements.lang) elements.lang.value = 'ko';
+        if (elements.tone) elements.tone.value = 'gentle';
+        if (elements.qcount) {
+          elements.qcount.value = 6;
+          if (elements.qcountLabel) elements.qcountLabel.textContent = '6';
+        }
+        
+        // 체크박스 초기화
+        $$('.valueChk').forEach(cb => {
+          cb.checked = cb.value.includes('courage') || cb.value.includes('faith');
+        });
+        
+        updateButtonStates();
+        toast('모든 설정이 초기화되었습니다.');
+      }
+
+      function saveSettings() {
+        const settings = {
+          story: elements.story?.value || '',
+          age: elements.age?.value || '8-10',
+          lang: elements.lang?.value || 'ko',
+          tone: elements.tone?.value || 'gentle',
+          qcount: elements.qcount?.value || 6,
+          values: getSelectedValues()
+        };
+        
+        try {
+          localStorage.setItem('pbl_bible_settings', JSON.stringify(settings));
+          toast('설정이 저장되었습니다.');
+        } catch (err) {
+          toast('설정 저장에 실패했습니다.');
+        }
+      }
+
+      function loadSettings() {
+        try {
+          const saved = localStorage.getItem('pbl_bible_settings');
+          if (!saved) {
+            toast('저장된 설정이 없습니다.');
+            return;
+          }
+          
+          const settings = JSON.parse(saved);
+          
+          if (elements.story) elements.story.value = settings.story || '';
+          if (elements.age) elements.age.value = settings.age || '8-10';
+          if (elements.lang) elements.lang.value = settings.lang || 'ko';
+          if (elements.tone) elements.tone.value = settings.tone || 'gentle';
+          if (elements.qcount) {
+            elements.qcount.value = settings.qcount || 6;
+            if (elements.qcountLabel) elements.qcountLabel.textContent = settings.qcount || 6;
+          }
+          
+          // 체크박스 설정
+          $$('.valueChk').forEach(cb => {
+            cb.checked = (settings.values || []).includes(cb.value);
+          });
+          
+          updateButtonStates();
+          toast('설정을 불러왔습니다.');
+        } catch (err) {
+          toast('설정 불러오기에 실패했습니다.');
+        }
+      }
+
+      // 이벤트 리스너 등록
+      function bindEvents() {
+        // 슬라이더 이벤트
+        if (elements.qcount && elements.qcountLabel) {
+          elements.qcount.addEventListener('input', () => {
+            elements.qcountLabel.textContent = elements.qcount.value;
+          });
+        }
+
+        // 버튼 이벤트들
+        if (elements.buildBtn) elements.buildBtn.addEventListener('click', buildPrompt);
+        if (elements.previewBtn) elements.previewBtn.addEventListener('click', localPreview);
+        if (elements.resetBtn) elements.resetBtn.addEventListener('click', resetForm);
+        if (elements.saveBtn) elements.saveBtn.addEventListener('click', saveSettings);
+        if (elements.loadBtn) elements.loadBtn.addEventListener('click', loadSettings);
+
+        // 복사 버튼들
+        if (elements.copyPrompt) {
+          elements.copyPrompt.addEventListener('click', () => {
+            copyText(elements.promptOut?.value || '');
+          });
+        }
+        
+        if (elements.copyPreview) {
+          elements.copyPreview.addEventListener('click', () => {
+            copyText(elements.previewOut?.textContent || '');
+          });
+        }
+
+        // 다운로드 버튼들
+        if (elements.downloadPrompt) {
+          elements.downloadPrompt.addEventListener('click', () => {
+            const filename = createSlug(elements.story?.value || 'prompt') + '-prompt.txt';
+            downloadFile(filename, elements.promptOut?.value || '');
+          });
+        }
+        
+        if (elements.downloadPreview) {
+          elements.downloadPreview.addEventListener('click', () => {
+            const filename = createSlug(elements.story?.value || 'preview') + '-preview.txt';
+            downloadFile(filename, elements.previewOut?.textContent || '');
+          });
+        }
+      }
+
+      // 초기화
+      function initialize() {
+        // 기본 샘플 텍스트 설정
+        if (elements.story && !elements.story.value) {
+          elements.story.value = 'Then David said to the Philistine, "You come to me with a sword and with a spear and with a javelin, but I come to you in the name of the LORD of hosts..." (1 Sam 17)';
+        }
+        
+        // 초기 슬라이더 값 설정
+        if (elements.qcountLabel && elements.qcount) {
+          elements.qcountLabel.textContent = elements.qcount.value;
+        }
+        
+        updateButtonStates();
+        bindEvents();
+      }
+
+      // DOM이 준비되면 초기화 실행
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initialize);
+      } else {
+        initialize();
+      }
+    })();
+  </script>
+</body>
+</html>
