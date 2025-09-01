@@ -25,7 +25,8 @@
     "url": "https://github.com/user/pbl-bible-story-prompt-builder.git"
   },
   "devDependencies": {
-    "wrangler": "^3.78.0"
+    "http-server": "^14.1.1",
+    "wrangler": "^4.33.1"
   },
   "engines": {
     "node": ">=16.0.0"
